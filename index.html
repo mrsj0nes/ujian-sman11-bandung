@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aplikasi Ujian Anti-Nyontek SMAN 11 Bandung</title>
+  <title>Aplikasi Ujian SMAN 11 Bandung</title>
   
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -82,7 +82,7 @@
     </div>
   </header>
 
-  <!-- MAIN CONTAINER: REGISTRASI & KONFIRMASI DATA SISWA KELAS 12 -->
+  <!-- MAIN CONTAINER: REGISTRASI & KONFIRMASI DATA SISWA -->
   <main id="startScreen" class="max-w-xl mx-auto px-4 py-8 md:py-12 w-full my-auto">
     <div class="bg-sman11-card border border-slate-800 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
       <!-- Decorative Accent -->
@@ -93,53 +93,44 @@
           TAHUN AJARAN 2026/2027
         </span>
         <h2 class="text-2xl md:text-3xl font-extrabold text-white">Konfirmasi Data Siswa</h2>
-        <p class="text-xs md:text-sm text-slate-400 mt-1">Pilih nama Anda atau ketik langsung sebelum memulai ujian online.</p>
+        <p class="text-xs md:text-sm text-slate-400 mt-1">Pilih kelas terlebih dahulu untuk mempercepat pencarian nama Anda.</p>
       </div>
 
       <!-- Form Data Diri Siswa -->
       <form id="studentForm" onsubmit="handleStartExam(event)" class="space-y-4">
+        
+        <!-- 1. KELAS PERTAMA -->
         <div>
-          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Nama Lengkap Siswa</label>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">1. Pilih Kelas</label>
           <div class="relative">
-            <span class="absolute left-3.5 top-3 text-slate-500"><i class="fa-solid fa-user"></i></span>
-            <input type="text" id="inputNama" list="studentMasterList" required placeholder="Ketik 1-2 huruf nama Anda..." class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sman11-blue transition" onchange="autoFillStudentDetails(this.value)" onkeyup="autoFillStudentDetails(this.value)">
-            <datalist id="studentMasterList"></datalist>
+            <span class="absolute left-3.5 top-3 text-slate-500"><i class="fa-solid fa-graduation-cap"></i></span>
+            <select id="inputKelas" required onchange="onClassSelected(this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-sman11-blue transition appearance-none">
+              <option value="" disabled selected>Pilih Kelas Terlebih Dahulu...</option>
+              <option value="XII 1">XII 1</option>
+              <option value="XII 2">XII 2</option>
+              <option value="XII 3">XII 3</option>
+              <option value="XII 4">XII 4</option>
+              <option value="XII 5">XII 5</option>
+              <option value="XII 6">XII 6</option>
+              <option value="XII 7">XII 7</option>
+              <option value="XII 8">XII 8</option>
+              <option value="XII 9">XII 9</option>
+              <option value="XII 10">XII 10</option>
+              <option value="XII 11">XII 11</option>
+              <option value="XII 12">XII 12</option>
+            </select>
           </div>
-          <p class="text-[11px] text-slate-500 mt-1">*Nama akan otomatis mencocokkan data absen Excel jika sudah diunggah oleh guru.</p>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">NISN / ID Siswa</label>
-            <div class="relative">
-              <span class="absolute left-3.5 top-3 text-slate-500"><i class="fa-solid fa-id-card"></i></span>
-              <input type="number" id="inputNisn" required placeholder="0061234567" class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sman11-blue transition">
-            </div>
+        <!-- 2. NAMA LENGKAP -->
+        <div>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">2. Nama Lengkap Siswa</label>
+          <div class="relative">
+            <span class="absolute left-3.5 top-3 text-slate-500"><i class="fa-solid fa-user"></i></span>
+            <input type="text" id="inputNama" list="studentMasterList" required placeholder="Ketik 1-2 huruf nama..." class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sman11-blue transition" onchange="autoFillStudentDetails(this.value)" onkeyup="autoFillStudentDetails(this.value)">
+            <datalist id="studentMasterList"></datalist>
           </div>
-
-          <div>
-            <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">Kelas 12</label>
-            <div class="relative">
-              <span class="absolute left-3.5 top-3 text-slate-500"><i class="fa-solid fa-graduation-cap"></i></span>
-              <select id="inputKelas" required class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-sman11-blue transition appearance-none">
-                <option value="" disabled selected>Pilih Kelas...</option>
-                <optgroup label="MIPA">
-                  <option value="12 MIPA 1">12 MIPA 1</option>
-                  <option value="12 MIPA 2">12 MIPA 2</option>
-                  <option value="12 MIPA 3">12 MIPA 3</option>
-                  <option value="12 MIPA 4">12 MIPA 4</option>
-                  <option value="12 MIPA 5">12 MIPA 5</option>
-                </optgroup>
-                <optgroup label="IPS">
-                  <option value="12 IPS 1">12 IPS 1</option>
-                  <option value="12 IPS 2">12 IPS 2</option>
-                  <option value="12 IPS 3">12 IPS 3</option>
-                  <option value="12 IPS 4">12 IPS 4</option>
-                  <option value="12 IPS 5">12 IPS 5</option>
-                </optgroup>
-              </select>
-            </div>
-          </div>
+          <p class="text-[11px] text-slate-500 mt-1">*Pilih kelas di atas agar daftar nama terfilter otomatis.</p>
         </div>
 
         <!-- Anti-cheat rules declaration box -->
@@ -185,7 +176,7 @@
     </div>
   </div>
 
-  <!-- MODAL POPUP PERINGATAN (Anti-Nyontek Red Box according to image) -->
+  <!-- MODAL POPUP PERINGATAN (Anti-Nyontek Red Box) -->
   <div id="warningModal" class="hidden fixed inset-0 modal-backdrop z-[9999] flex items-center justify-center p-4">
     <div class="bg-sman11-red text-white w-full max-w-sm rounded-2xl p-6 shadow-2xl text-center border-2 border-red-400 animate-pulse-alert">
       <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 text-3xl">
@@ -249,14 +240,13 @@
               <th class="p-2.5">Waktu</th>
               <th class="p-2.5">Nama Siswa</th>
               <th class="p-2.5">Kelas</th>
-              <th class="p-2.5">NISN</th>
               <th class="p-2.5 text-center">Pelanggaran</th>
               <th class="p-2.5 text-center">Status</th>
             </tr>
           </thead>
           <tbody id="monitoringTableBody" class="divide-y divide-slate-800/60 text-slate-300">
             <tr>
-              <td colspan="6" class="p-6 text-center text-slate-500">Belum ada aktivitas siswa...</td>
+              <td colspan="5" class="p-6 text-center text-slate-500">Belum ada aktivitas siswa...</td>
             </tr>
           </tbody>
         </table>
@@ -272,7 +262,7 @@
     </div>
   </div>
 
-  <!-- MODAL PASTE MASTER DATA EXCEL (Daftar_Hadir_Murid_TP_2026-2027_JULI.xlsx) -->
+  <!-- MODAL PASTE MASTER DATA EXCEL -->
   <div id="importStudentModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9000] flex items-center justify-center p-4">
     <div class="bg-sman11-card border border-slate-700 w-full max-w-lg rounded-2xl p-6 shadow-2xl text-left">
       <div class="flex items-center justify-between mb-3">
@@ -283,10 +273,10 @@
         <button onclick="closeImportModal()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
       </div>
       <p class="text-xs text-slate-400 mb-3">
-        Buka file <strong class="text-sman11-blue">Daftar_Hadir_Murid_TP_2026-2027_JULI.xlsx</strong> di Excel, blok/copy sel baris siswa lalu <strong class="text-sman11-green">Paste (Ctrl+V)</strong> langsung di bawah ini.
+        Buka file Excel di laptop, blok/copy sel baris siswa (`No`, `NIS`, `NISN`, `Nama`, `JK`, `Kelas`) lalu <strong class="text-sman11-green">Paste (Ctrl+V)</strong> langsung di bawah ini.
       </p>
 
-      <textarea id="csvTextArea" rows="7" placeholder="Tempel/Paste langsung dari Excel di sini...&#10;&#10;Contoh hasil paste dari Excel:&#10;1	0061234567	Ahmad Rizky	L	12 MIPA 1&#10;2	0061234568	Siti Rahma	P	12 MIPA 1&#10;3	0061234569	Budi Santoso	L	12 IPS 2" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-sman11-blue mb-4"></textarea>
+      <textarea id="csvTextArea" rows="7" placeholder="Tempel/Paste langsung dari Excel di sini...&#10;&#10;Contoh hasil paste dari Excel:&#10;1	242510256	0097254302	AGNI ALISYA ANNAFI	P	XII 1&#10;2	242510111	0094225911	ALEISYA KAUREEN ANDITIAN	P	XII 1&#10;3	242510258	0085499895	ALIF OKANZA PUTRA	L	XII 1" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-sman11-blue mb-4"></textarea>
 
       <div class="flex items-center justify-between gap-2">
         <button onclick="clearMasterStudents()" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-semibold px-3 py-2 rounded-xl border border-red-500/30">
@@ -307,7 +297,7 @@
         <i class="fa-solid fa-key"></i>
       </div>
       <h3 class="text-base font-bold text-white mb-1">Akses Dashboard Guru</h3>
-      <p class="text-xs text-slate-400 mb-4">Masukkan PIN Akses (Default: 2310)</p>
+      <p class="text-xs text-slate-400 mb-4">Masukkan PIN Akses Guru</p>
       
       <input type="password" id="inputTeacherPin" maxlength="6" placeholder="PIN..." class="w-full bg-slate-900 border border-slate-700 text-center text-lg tracking-widest rounded-xl py-2 text-white focus:outline-none focus:border-sman11-blue mb-4">
       
@@ -328,7 +318,7 @@
 
   <script>
     // GLOBAL STATE VARIABLES
-    let currentStudent = { nama: '', nisn: '', kelas: '' };
+    let currentStudent = { nama: '', kelas: '' };
     let violationCount = 0;
     const maxViolations = 3;
     let isExamActive = false;
@@ -342,7 +332,6 @@
       try {
         sirenAudio.currentTime = 0;
         sirenAudio.play().catch(err => {
-          // Fallback to Web Audio Synth if external audio blocked
           playSynthBeep();
         });
       } catch(e) {
@@ -375,14 +364,13 @@
       e.preventDefault();
       
       const nama = document.getElementById('inputNama').value.trim();
-      const nisn = document.getElementById('inputNisn').value.trim();
       const kelas = document.getElementById('inputKelas').value;
 
-      if (!nama || !nisn || !kelas) {
-        return alert("Mohon lengkapi Nama, NISN, dan Kelas terlebih dahulu!");
+      if (!kelas || !nama) {
+        return alert("Mohon pilih Kelas dan Nama terlebih dahulu!");
       }
 
-      currentStudent = { nama, nisn, kelas };
+      currentStudent = { nama, kelas };
       document.getElementById('displayStudentInfo').innerText = `Siswa: ${nama} (${kelas})`;
 
       // Request Fullscreen
@@ -487,14 +475,12 @@
         waktu: new Date().toLocaleTimeString('id-ID'),
         nama: currentStudent.nama,
         kelas: currentStudent.kelas,
-        nisn: currentStudent.nisn,
         pelanggaran: viol,
         status: action
       };
 
       let logs = JSON.parse(localStorage.getItem("sman11_monitoring_logs") || "[]");
-      // Update or push
-      const existingIdx = logs.findIndex(l => l.nisn === currentStudent.nisn);
+      const existingIdx = logs.findIndex(l => l.nama === currentStudent.nama && l.kelas === currentStudent.kelas);
       if (existingIdx >= 0) {
         logs[existingIdx] = logItem;
       } else {
@@ -511,7 +497,7 @@
 
       const logs = JSON.parse(localStorage.getItem("sman11_monitoring_logs") || "[]");
       if (logs.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="p-6 text-center text-slate-500">Belum ada aktivitas siswa...</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Belum ada aktivitas siswa...</td></tr>`;
         return;
       }
 
@@ -520,7 +506,6 @@
           <td class="p-2.5 font-mono text-[11px]">${l.waktu}</td>
           <td class="p-2.5 font-bold">${l.nama}</td>
           <td class="p-2.5">${l.kelas}</td>
-          <td class="p-2.5 font-mono">${l.nisn}</td>
           <td class="p-2.5 text-center font-extrabold ${l.pelanggaran > 0 ? 'text-red-400' : 'text-emerald-400'}">${l.pelanggaran}</td>
           <td class="p-2.5 text-center">
             <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${l.pelanggaran > 0 ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'}">
@@ -538,14 +523,14 @@
       }
     };
 
-    // MASTER STUDENT EXCEL PARSER (Daftar_Hadir_Murid_TP_2026-2027_JULI.xlsx)
+    // MASTER STUDENT EXCEL PARSER
     window.showImportModal = function() {
       document.getElementById('importStudentModal').classList.remove('hidden');
       const stored = localStorage.getItem("sman11_master_students");
       if (stored) {
         try {
           const list = JSON.parse(stored);
-          document.getElementById('csvTextArea').value = list.map(s => `${s.nisn}\t${s.nama}\t${s.kelas}`).join("\n");
+          document.getElementById('csvTextArea').value = list.map(s => `${s.nama}\t${s.kelas}`).join("\n");
         } catch(e){}
       }
     };
@@ -566,34 +551,34 @@
         
         let parts = line.split(/[\t,;]+/).map(p => p.trim()).filter(p => p !== '');
         const lineUpper = line.toUpperCase();
-        if (lineUpper.includes("NAMA") && lineUpper.includes("NIS")) return;
-        if (lineUpper.includes("DAFTAR HADIR") || lineUpper.includes("NO.")) return;
+        // Skip header lines
+        if (lineUpper.includes("NAMA") || lineUpper.includes("NISN") || lineUpper.includes("DAFTAR HADIR") || (lineUpper.includes("NO.") && lineUpper.includes("NIS"))) return;
 
         if (parts.length >= 2) {
-          let nama = '', nisn = '', kelas = '';
+          let nama = '', kelas = '';
 
           parts.forEach(part => {
-            if (/^\d{8,12}$/.test(part)) {
-              nisn = part;
-            } else if (/^12\s*(MIPA|IPS|MBL|IPA)\s*\d+$/i.test(part) || /^XII\s*(MIPA|IPS|MBL|IPA)\s*\d+$/i.test(part)) {
-              kelas = part.toUpperCase();
-            } else if (!/^\d+$/.test(part) && part.length > 2 && part !== 'L' && part !== 'P') {
+            const upper = part.toUpperCase();
+            
+            // Detect class (e.g., XII 1, XII 12, 12 MIPA 1, etc.)
+            if (/^(XII|12)\s*[\.-]?\s*\d+$/i.test(part) || /^12\s*(MIPA|IPS|MBL|IPA)\s*\d+$/i.test(part) || /^XII\s*(MIPA|IPS|MBL|IPA)\s*\d+$/i.test(part)) {
+              let match = part.match(/\d+/);
+              if (match) {
+                kelas = `XII ${match[0]}`;
+              } else {
+                kelas = upper;
+              }
+            } 
+            // Detect student full name (ignore numbers, headers, and 'L' / 'P')
+            else if (!/^\d+$/.test(part) && upper !== 'L' && upper !== 'P' && upper !== 'NO.' && upper !== 'JK' && upper !== 'NIS' && upper !== 'NISN') {
               if (!nama) nama = part;
             }
           });
 
-          if (!nama || !nisn) {
-            if (/^\d{1,3}$/.test(parts[0]) && parts.length >= 3) parts.shift();
-            if (!nisn && parts[0]) nisn = parts[0];
-            if (!nama && parts[1]) nama = parts[1];
-            if (!kelas && parts[2]) kelas = parts[2];
-          }
-
           if (nama) {
             masterList.push({
               nama: nama,
-              nisn: nisn || ('006' + Math.floor(1000000 + Math.random() * 9000000)),
-              kelas: kelas || '12 MIPA 1'
+              kelas: kelas || 'XII 1'
             });
           }
         }
@@ -618,7 +603,12 @@
       }
     };
 
-    function updateStudentDatalist() {
+    window.onClassSelected = function(selectedClass) {
+      updateStudentDatalist(selectedClass);
+      document.getElementById('inputNama').value = '';
+    };
+
+    function updateStudentDatalist(filterClass = '') {
       const datalist = document.getElementById('studentMasterList');
       if (!datalist) return;
       datalist.innerHTML = '';
@@ -628,10 +618,23 @@
         try {
           const list = JSON.parse(stored);
           document.getElementById('totalMasterCount').innerText = list.length;
-          list.forEach(s => {
+          
+          let filtered = list;
+          if (filterClass) {
+            let numMatch = filterClass.match(/\d+/);
+            let targetNum = numMatch ? numMatch[0] : null;
+
+            filtered = list.filter(s => {
+              if (s.kelas.toUpperCase() === filterClass.toUpperCase()) return true;
+              if (targetNum && s.kelas.endsWith(` ${targetNum}`)) return true;
+              return false;
+            });
+          }
+
+          filtered.forEach(s => {
             const opt = document.createElement('option');
             opt.value = s.nama;
-            opt.label = `${s.nisn} - ${s.kelas}`;
+            opt.label = s.kelas;
             datalist.appendChild(opt);
           });
         } catch(e){}
@@ -645,10 +648,17 @@
         const list = JSON.parse(stored);
         const match = list.find(s => s.nama.toLowerCase() === selectedName.toLowerCase());
         if (match) {
-          document.getElementById('inputNisn').value = match.nisn;
           const selectKelas = document.getElementById('inputKelas');
+          
+          let targetKelas = match.kelas.toUpperCase();
+          let numMatch = targetKelas.match(/\d+/);
+          let targetNum = numMatch ? numMatch[0] : null;
+
           for (let option of selectKelas.options) {
-            if (option.value.toLowerCase() === match.kelas.toLowerCase()) {
+            if (option.value.toUpperCase() === targetKelas) {
+              option.selected = true;
+              break;
+            } else if (targetNum && option.value.endsWith(` ${targetNum}`)) {
               option.selected = true;
               break;
             }
@@ -670,18 +680,17 @@
 
     window.verifyTeacherPin = function() {
       const pin = document.getElementById('inputTeacherPin').value;
-      if (pin === "2310") { // Default PIN
+      if (pin === "2310") {
         closePinModal();
         document.getElementById('teacherDashboardModal').classList.remove('hidden');
         renderMonitoringTable();
         
-        // Populate current form URL
         const savedUrl = localStorage.getItem("sman11_form_url");
         if (savedUrl) {
           document.getElementById('inputFormUrl').value = savedUrl;
         }
       } else {
-        alert("PIN Guru salah! (Default PIN: 2310)");
+        alert("PIN Guru salah! Silakan coba lagi.");
       }
     };
 
