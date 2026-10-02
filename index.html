@@ -530,7 +530,7 @@
       }
     }
 
-    // PEMASANGAN URL GOOGLE FORM TANPA SIMPAN DRAFT JAWABAN SISWA SEBELUMNYA
+    // PEMASANGAN URL GOOGLE FORM DENGAN RESET SESSION & CLEAR COOKIE CACHE
     function handleStartExam(e) {
       e.preventDefault();
       const name = document.getElementById('studentName').value.trim();
@@ -545,16 +545,25 @@
       document.getElementById('activeStudentName').innerText = name;
       document.getElementById('activeStudentClass').innerText = cls;
 
-      // Tambahkan parameter anti-cache & reset history agar form bersih
-      let targetUrl = currentGFormUrl;
-      const separator = targetUrl.includes('?') ? '&' : '?';
-      targetUrl = `${targetUrl}${separator}history=0&ts=${Date.now()}`;
+      // Bersihkan Session & Cookie Browser lokal agar draf jawaban terhapus total
+      try {
+        sessionStorage.clear();
+        document.cookie.split(";").forEach((c) => {
+          document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
+      } catch(err) {}
+
+      // Ubah URL ke versi fresh tanpa membawa memori draf sebelumnya
+      let cleanUrl = currentGFormUrl;
+      cleanUrl = cleanUrl.replace(/\/viewform.*/, '/viewform');
+      const randomNonce = Math.floor(Math.random() * 1000000);
+      const targetUrl = `${cleanUrl}?usp=pp_url&entry.reset=1&r=${randomNonce}`;
 
       const iframe = document.getElementById('examIframe');
       iframe.src = 'about:blank';
       setTimeout(() => {
         iframe.src = targetUrl;
-      }, 100);
+      }, 150);
 
       document.getElementById('examScreen').classList.remove('hidden');
       document.getElementById('examScreen').classList.add('flex');
@@ -644,7 +653,15 @@
       if (confirm('Apakah Anda yakin telah selesai mengerjakan ujian?')) {
         isExamActive = false;
         document.getElementById('examScreen').classList.add('hidden');
-        document.getElementById('examIframe').src = 'about:blank';
+        
+        // Reset total iframe dan hapus cache sementara saat keluar
+        const iframe = document.getElementById('examIframe');
+        iframe.src = 'about:blank';
+
+        try {
+          sessionStorage.clear();
+        } catch(e) {}
+
         if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
         alert('Terima kasih, jawaban Anda telah tersimpan.');
       }
