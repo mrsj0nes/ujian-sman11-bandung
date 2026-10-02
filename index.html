@@ -1,111 +1,84 @@
 <!DOCTYPE html>
-<html lang="id" class="dark">
+<html lang="id">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aplikasi Ujian SMAN 11 Bandung</title>
-  
+  <title>CBT Ujian Online - SMAN 11 Bandung</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- Font Awesome Icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <!-- Google Font: Inter -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: { sans: ['Inter', 'sans-serif'] },
-          colors: {
-            sman11: {
-              blue: '#38bdf8',    // Biru Muda Logo
-              navy: '#0f172a',    // Navy SMAN 11
-              card: '#1e293b',    // Slate Dark Card
-              green: '#22c55e',   // Hijau Logo
-              red: '#ef4444'      // Red Alert
-            }
-          }
-        }
-      }
-    }
-  </script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- SheetJS CDN for reading Excel files directly -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- Firebase App & Firestore App -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
     body {
+      font-family: 'Inter', sans-serif;
       background-color: #0f172a;
       color: #f8fafc;
-      user-select: none;
-      -webkit-user-select: none;
+      touch-action: manipulation;
     }
-    .modal-backdrop {
-      background: rgba(15, 23, 42, 0.85);
-      backdrop-filter: blur(8px);
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
     }
-    @keyframes pulseAlert {
-      0%, 100% { transform: scale(1); opacity: 1; }
-      50% { transform: scale(1.03); opacity: 0.95; }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #1e293b;
     }
-    .animate-pulse-alert {
-      animation: pulseAlert 1.2s infinite ease-in-out;
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #3b82f6;
+      border-radius: 3px;
     }
-    /* Custom scrollbar for dashboard */
-    ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #0f172a; }
-    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
   </style>
 </head>
-<body class="min-h-screen font-sans flex flex-col justify-between antialiased">
+<body class="min-h-screen flex flex-col justify-between selection:bg-sky-500 selection:text-white">
 
-  <!-- HEADER / NAVBAR SMAN 11 BANDUNG -->
-  <header class="bg-sman11-card/90 border-b border-slate-800 sticky top-0 z-40 backdrop-blur-md px-4 py-3">
-    <div class="max-w-7xl mx-auto flex items-center justify-between">
+  <!-- NAVIGATION HEADER -->
+  <header class="bg-slate-900/80 backdrop-blur border-b border-slate-800 sticky top-0 z-40 px-4 py-3">
+    <div class="max-w-6xl mx-auto flex justify-between items-center">
       <div class="flex items-center gap-3">
-        <!-- Badge Logo SVG / Symbol SMAN 11 -->
-        <div class="w-10 h-10 rounded-xl bg-sman11-blue/20 border border-sman11-blue/40 flex items-center justify-center text-sman11-blue font-black text-xl shadow-lg">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-blue-600 flex items-center justify-center font-bold text-white shadow-lg shadow-sky-500/20">
           11
         </div>
         <div>
-          <h1 class="font-extrabold text-sm md:text-base tracking-wide text-white leading-tight">SMAN 11 BANDUNG</h1>
-          <p class="text-[11px] text-sman11-blue font-medium">Sistem Ujian Online</p>
+          <h1 class="font-bold text-slate-100 leading-tight">SMAN 11 BANDUNG</h1>
+          <p class="text-xs text-sky-400 font-medium">Sistem Ujian Online</p>
         </div>
       </div>
-
-      <!-- Action Buttons Header -->
-      <div class="flex items-center gap-2">
-        <button onclick="showTeacherPinModal()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 text-xs font-semibold transition flex items-center gap-2">
-          <i class="fa-solid fa-user-shield text-sman11-blue"></i>
-          <span class="hidden sm:inline">Dashboard Guru</span>
-        </button>
-      </div>
+      <button onclick="openTeacherAuth()" class="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 font-medium border border-slate-700 transition flex items-center gap-2">
+        <i class="fa-solid fa-user-gear text-sky-400"></i>
+        <span>Dashboard Guru</span>
+      </button>
     </div>
   </header>
 
-  <!-- MAIN CONTAINER: REGISTRASI & KONFIRMASI DATA SISWA -->
-  <main id="startScreen" class="max-w-xl mx-auto px-4 py-8 md:py-12 w-full my-auto">
-    <div class="bg-sman11-card border border-slate-800 rounded-2xl p-6 md:p-8 shadow-2xl relative overflow-hidden">
-      <!-- Decorative Accent -->
-      <div class="absolute -right-12 -top-12 w-40 h-40 bg-sman11-blue/10 rounded-full blur-2xl pointer-events-none"></div>
+  <!-- MAIN CONTAINER / STUDENT LANDING -->
+  <main class="max-w-xl w-full mx-auto p-4 my-auto">
+    <div id="studentContainer" class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+      <div class="absolute -top-12 -right-12 w-32 h-32 bg-sky-500/10 rounded-full blur-2xl pointer-events-none"></div>
       
       <div class="text-center mb-6">
-        <span class="inline-block bg-sman11-blue/10 text-sman11-blue text-xs font-bold px-3 py-1 rounded-full border border-sman11-blue/20 mb-2">
-          TAHUN AJARAN 2026/2027
+        <span class="inline-block px-3 py-1 bg-sky-500/10 border border-sky-500/20 rounded-full text-sky-400 text-xs font-semibold uppercase tracking-wider mb-2">
+          Tahun Ajaran 2026/2027
         </span>
-        <h2 class="text-2xl md:text-3xl font-extrabold text-white">Konfirmasi Data Siswa</h2>
-        <p class="text-xs md:text-sm text-slate-400 mt-1">Pilih kelas terlebih dahulu untuk mempercepat pencarian nama Anda.</p>
+        <h2 class="text-2xl font-bold text-white">Konfirmasi Data Siswa</h2>
+        <p class="text-xs text-slate-400 mt-1">Pilih kelas terlebih dahulu untuk mempercepat pencarian nama Anda.</p>
       </div>
 
-      <!-- Form Data Diri Siswa -->
-      <form id="studentForm" onsubmit="handleStartExam(event)" class="space-y-4">
+      <form id="studentLoginForm" onsubmit="handleStartExam(event)" class="space-y-4">
         
-        <!-- 1. KELAS PERTAMA -->
+        <!-- STEP 1: SELECT KELAS -->
         <div>
-          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">1. Pilih Kelas</label>
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+            1. Pilih Kelas
+          </label>
           <div class="relative">
-            <span class="absolute left-3.5 top-3 text-slate-500"><i class="fa-solid fa-graduation-cap"></i></span>
-            <select id="inputKelas" required onchange="onClassSelected(this.value)" class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white focus:outline-none focus:border-sman11-blue transition appearance-none">
-              <option value="" disabled selected>Pilih Kelas Terlebih Dahulu...</option>
+            <i class="fa-solid fa-graduation-cap absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+            <select id="studentClass" required onchange="handleClassChange()" class="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 pl-10 pr-4 text-sm text-slate-100 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500 appearance-none">
+              <option value="" disabled selected>Pilih Kelas...</option>
               <option value="XII 1">XII 1</option>
               <option value="XII 2">XII 2</option>
               <option value="XII 3">XII 3</option>
@@ -119,618 +92,529 @@
               <option value="XII 11">XII 11</option>
               <option value="XII 12">XII 12</option>
             </select>
+            <i class="fa-solid fa-chevron-down absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs pointer-events-none"></i>
           </div>
         </div>
 
-        <!-- 2. NAMA LENGKAP -->
-        <div>
-          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5">2. Nama Lengkap Siswa</label>
+        <!-- STEP 2: SELECT NAMA (WITH TOUCH & SEARCH DROPDOWN) -->
+        <div class="relative">
+          <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+            2. Nama Lengkap Siswa
+          </label>
           <div class="relative">
-            <span class="absolute left-3.5 top-3 text-slate-500"><i class="fa-solid fa-user"></i></span>
-            <input type="text" id="inputNama" list="studentMasterList" required placeholder="Ketik 1-2 huruf nama..." class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-sman11-blue transition" onchange="autoFillStudentDetails(this.value)" onkeyup="autoFillStudentDetails(this.value)">
-            <datalist id="studentMasterList"></datalist>
+            <i class="fa-solid fa-user absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+            <input type="text" id="studentName" required placeholder="Ketik 1-2 huruf nama Anda..." autocomplete="off" oninput="handleNameInput()" onfocus="handleNameInput()" class="w-full bg-slate-950 border border-slate-800 rounded-xl py-3 pl-10 pr-4 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500 focus:ring-1 focus:ring-sky-500">
           </div>
           <p class="text-[11px] text-slate-500 mt-1">*Pilih kelas di atas agar daftar nama terfilter otomatis.</p>
+
+          <!-- MOBILE & DESKTOP CUSTOM SUGGESTION LIST -->
+          <div id="suggestionBox" class="hidden absolute left-0 right-0 top-full mt-1 bg-slate-900 border border-slate-700 rounded-xl max-h-48 overflow-y-auto z-50 shadow-2xl custom-scrollbar divide-y divide-slate-800"></div>
         </div>
 
-        <!-- Anti-cheat rules declaration box -->
-        <div class="bg-slate-900/80 border border-amber-500/30 rounded-xl p-3 text-xs text-amber-200/90 flex items-start gap-2.5 mt-2">
-          <i class="fa-solid fa-triangle-exclamation text-amber-400 text-sm mt-0.5 shrink-0"></i>
-          <div>
-            <strong class="font-bold text-amber-300">Aturan Keamanan Ujian:</strong>
-            <ul class="list-disc list-inside mt-1 space-y-0.5 text-slate-300 text-[11px]">
-              <li>Layar akan dikunci dalam mode <strong>Fullscreen</strong>.</li>
-              <li>Dilarang menggeser layar / pindah tab / keluar aplikasi.</li>
-              <li>Sistem akan menyalakan <strong>Alarm Sirine</strong> dan mencatat pelanggaran.</li>
-            </ul>
+        <!-- SECURITY NOTICE -->
+        <div class="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-200 text-xs space-y-1">
+          <div class="font-semibold flex items-center gap-1.5 text-amber-400">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>Aturan Keamanan Ujian:</span>
           </div>
+          <ul class="list-disc list-inside space-y-0.5 text-slate-300 pl-1 text-[11px]">
+            <li>Layar akan dikunci dalam mode Fullscreen.</li>
+            <li>Dilarang menggeser layar / pindah tab / keluar aplikasi.</li>
+            <li>Sistem akan menyalakan <b>Alarm Sirine</b> dan mencatat pelanggaran.</li>
+          </ul>
         </div>
 
-        <button type="submit" class="w-full bg-sman11-blue hover:bg-sky-400 text-slate-950 font-extrabold py-3.5 px-4 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm uppercase tracking-wide mt-4">
-          <i class="fa-solid fa-lock-open"></i> Mulai Ujian (Kunci Layar)
+        <!-- SUBMIT BUTTON -->
+        <button type="submit" class="w-full py-3.5 px-4 rounded-xl bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 text-slate-950 font-bold text-sm shadow-lg shadow-sky-500/20 transition flex items-center justify-center gap-2">
+          <i class="fa-solid fa-lock"></i>
+          <span>MULAI UJIAN (KUNCI LAYAR)</span>
         </button>
       </form>
     </div>
   </main>
 
-  <!-- EXAM SCREEN (HIDDEN UNTIL STARTED) -->
-  <div id="examContainer" class="hidden fixed inset-0 w-full h-full bg-slate-950 z-50 flex flex-col">
-    <!-- Top Info Bar -->
-    <div class="bg-slate-900 border-b border-slate-800 px-4 py-2 flex items-center justify-between shrink-0">
-      <div class="flex items-center gap-2">
-        <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-        <span id="displayStudentInfo" class="text-xs font-semibold text-slate-300">Siswa: -</span>
-      </div>
+  <!-- EXAM SCREEN (IFRAME FULLSCREEN) -->
+  <div id="examScreen" class="fixed inset-0 bg-slate-950 z-50 hidden flex-col">
+    <!-- EXAM HEADER -->
+    <div class="bg-slate-900 px-4 py-2 border-b border-slate-800 flex justify-between items-center text-xs">
       <div class="flex items-center gap-3">
-        <span class="text-xs font-bold text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2.5 py-1 rounded-lg">
-          Pelanggaran: <span id="studentViolCount">0</span>/3
+        <span class="font-bold text-sky-400 flex items-center gap-1">
+          <i class="fa-solid fa-user"></i> <span id="activeStudentName">-</span>
         </span>
+        <span class="text-slate-500">|</span>
+        <span class="text-slate-300" id="activeStudentClass">-</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <span class="px-2 py-0.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded text-[11px] font-medium flex items-center gap-1">
+          <i class="fa-solid fa-shield-halved"></i> Mode Ujian Aktif
+        </span>
+        <button onclick="confirmExitExam()" class="px-2.5 py-1 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded text-[11px] font-medium transition">
+          Selesai Ujian
+        </button>
       </div>
     </div>
 
-    <!-- Embedded Google Form Frame -->
-    <div class="relative w-full h-full flex-grow bg-white">
-      <iframe id="googleFormIframe" src="https://docs.google.com/forms/d/e/1FAIpQLSe_EXAMPLE_FORM_ID/viewform?embedded=true" class="w-full h-full border-0">
-        Sedang memuat soal ujian...
-      </iframe>
+    <!-- GOOGLE FORM IFRAME WRAPPER -->
+    <div class="flex-1 w-full h-full relative bg-white">
+      <iframe id="examIframe" src="about:blank" class="w-full h-full border-0"></iframe>
     </div>
   </div>
 
-  <!-- MODAL POPUP PERINGATAN (Anti-Nyontek Red Box) -->
-  <div id="warningModal" class="hidden fixed inset-0 modal-backdrop z-[9999] flex items-center justify-center p-4">
-    <div class="bg-sman11-red text-white w-full max-w-sm rounded-2xl p-6 shadow-2xl text-center border-2 border-red-400 animate-pulse-alert">
-      <div class="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-3 text-3xl">
-        ⚠️
+  <!-- VIOLATION WARNING MODAL -->
+  <div id="violationModal" class="fixed inset-0 bg-red-950/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border-2 border-red-500 rounded-2xl max-w-md w-full p-6 text-center shadow-2xl space-y-4">
+      <div class="w-16 h-16 bg-red-500/20 text-red-500 rounded-full flex items-center justify-center mx-auto text-3xl animate-bounce">
+        <i class="fa-solid fa-bell"></i>
       </div>
-      <h3 class="text-2xl font-black tracking-wide uppercase">PERINGATAN!</h3>
-      <p class="text-lg font-bold mt-1">Pindah tab terdeteksi!</p>
-      <p class="text-xs text-white/90 mt-2 bg-black/20 p-2.5 rounded-xl border border-white/10">
-        Aktivitas Anda sedang dimonitor oleh guru.<br>
-        Jumlah Pelanggaran: <strong id="modalViolText" class="text-yellow-300 text-sm">1</strong> / 3
+      <h3 class="text-xl font-bold text-red-400 uppercase tracking-wide">Peringatan Pelanggaran!</h3>
+      <p class="text-xs text-slate-300 leading-relaxed">
+        Anda terdeteksi keluar dari layar ujian atau berpindah aplikasi! Pelanggaran ini telah dicatat secara otomatis oleh sistem.
       </p>
-
-      <button onclick="closeWarningModal()" class="w-full mt-5 bg-white hover:bg-slate-100 text-sman11-red font-black py-3 rounded-xl shadow-lg transition text-sm">
-        Kembali ke Ujian
+      <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl text-xs text-slate-400">
+        Total Pelanggaran: <span id="violationCountText" class="font-bold text-red-400 text-sm">0</span> kali
+      </div>
+      <button onclick="dismissViolation()" class="w-full py-3 bg-red-600 hover:bg-red-500 text-white font-bold rounded-xl text-sm transition">
+        Saya Mengerti & Kembali Ujian
       </button>
     </div>
   </div>
 
-  <!-- MODAL DASHBOARD MONITORING GURU (PIN PROTECTED) -->
-  <div id="teacherDashboardModal" class="hidden fixed inset-0 bg-slate-950/90 backdrop-blur-md z-[8000] flex items-center justify-center p-4">
-    <div class="bg-sman11-card border border-slate-700 w-full max-w-4xl rounded-2xl p-6 shadow-2xl flex flex-col max-h-[90vh]">
-      
-      <!-- Dashboard Header -->
-      <div class="flex items-center justify-between border-b border-slate-700 pb-4 mb-4 shrink-0">
+  <!-- TEACHER AUTH MODAL -->
+  <div id="teacherAuthModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-xs w-full p-5 text-center shadow-2xl space-y-4">
+      <h3 class="text-base font-bold text-white">Akses Dashboard Guru</h3>
+      <input type="password" id="teacherPinInput" placeholder="Masukkan PIN..." class="w-full bg-slate-950 border border-slate-800 rounded-xl py-2.5 px-3 text-center text-sm text-white focus:outline-none focus:border-sky-500">
+      <div class="flex gap-2">
+        <button onclick="closeTeacherAuth()" class="w-1/2 py-2 bg-slate-800 hover:bg-slate-700 text-xs text-slate-300 rounded-xl font-medium">Batal</button>
+        <button onclick="verifyTeacherPin()" class="w-1/2 py-2 bg-sky-500 hover:bg-sky-400 text-xs text-slate-950 font-bold rounded-xl">Masuk</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TEACHER DASHBOARD MODAL -->
+  <div id="teacherDashboardModal" class="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full p-6 shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto custom-scrollbar">
+      <div class="flex justify-between items-center border-b border-slate-800 pb-3">
         <div>
-          <h2 class="text-lg font-bold text-white flex items-center gap-2">
-            <i class="fa-solid fa-chart-line text-sman11-blue"></i>
-            Dashboard Monitoring Ujian Real-Time
-          </h2>
-          <p class="text-xs text-slate-400">SMAN 11 Bandung • Monitoring Pelanggaran Siswa</p>
+          <h3 class="text-lg font-bold text-white">Dashboard Monitoring Guru</h3>
+          <p class="text-xs text-slate-400">Kelola soal Google Form & Data Siswa SMAN 11 Bandung</p>
         </div>
-        <button onclick="closeTeacherDashboard()" class="text-slate-400 hover:text-white text-xl"><i class="fa-solid fa-xmark"></i></button>
+        <button onclick="closeTeacherDashboard()" class="text-slate-400 hover:text-white p-1">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
       </div>
 
-      <!-- Action & Settings Toolbar -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4 shrink-0">
-        <div class="bg-slate-900 p-3 rounded-xl border border-slate-800">
-          <label class="block text-[11px] font-semibold text-slate-400 uppercase mb-1">Set URL Google Form Ujian</label>
-          <div class="flex gap-2">
-            <input type="text" id="inputFormUrl" placeholder="https://docs.google.com/forms/d/e/.../viewform" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-sman11-blue">
-            <button onclick="saveFormUrl()" class="bg-sman11-blue text-slate-950 font-bold px-3 py-1.5 rounded-lg text-xs hover:bg-sky-400 shrink-0">Simpan</button>
-          </div>
+      <!-- FORM SETTINGS -->
+      <div class="space-y-3 bg-slate-950/50 p-4 rounded-xl border border-slate-800">
+        <label class="block text-xs font-semibold text-sky-400 uppercase tracking-wider">Set Link Google Form Ujian</label>
+        <div class="flex gap-2">
+          <input type="url" id="gformUrlInput" placeholder="https://docs.google.com/forms/d/e/.../viewform" class="flex-1 bg-slate-950 border border-slate-800 rounded-xl py-2 px-3 text-xs text-slate-200 focus:outline-none focus:border-sky-500">
+          <button onclick="saveGFormUrl()" class="px-4 py-2 bg-sky-500 hover:bg-sky-400 text-slate-950 font-bold text-xs rounded-xl">Simpan</button>
         </div>
+      </div>
 
-        <div class="bg-slate-900 p-3 rounded-xl border border-slate-800 flex items-center justify-between gap-2">
-          <div>
-            <p class="text-xs font-bold text-white">Import Data Absen Excel</p>
-            <p class="text-[11px] text-slate-400">Paste langsung daftar siswa dari Excel</p>
-          </div>
-          <button onclick="showImportModal()" class="bg-sman11-green hover:bg-emerald-500 text-slate-950 font-bold px-3 py-2 rounded-lg text-xs transition shrink-0 flex items-center gap-1.5">
-            <i class="fa-solid fa-file-excel"></i> Upload Excel
+      <!-- EXCEL IMPORT SECTION -->
+      <div class="space-y-3 bg-slate-950/50 p-4 rounded-xl border border-slate-800">
+        <div class="flex justify-between items-center">
+          <label class="block text-xs font-semibold text-emerald-400 uppercase tracking-wider">Import Data Siswa (File Excel / Copas)</label>
+
+          <span id="masterStudentCount" class="text-[11px] text-slate-400">Total: 0 siswa</span>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-2">
+          <!-- DIRECT FILE EXCEL UPLOAD -->
+          <label class="flex-1 cursor-pointer bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 rounded-xl p-3 text-center transition">
+            <i class="fa-solid fa-file-excel text-emerald-400 text-lg mb-1 block"></i>
+            <span class="text-xs text-emerald-300 font-medium block">Pilih File Excel (.xlsx / .xls)</span>
+            <input type="file" id="excelFileInput" accept=".xlsx, .xls" onchange="handleExcelFileUpload(event)" class="hidden">
+          </label>
+          <button onclick="openTextImportModal()" class="px-4 py-3 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-300 rounded-xl text-xs font-medium transition">
+            Copas Manual
           </button>
         </div>
       </div>
 
-      <!-- Monitoring Table -->
-      <div class="overflow-y-auto flex-grow rounded-xl border border-slate-800 bg-slate-900/60 p-2">
-        <table class="w-full text-left text-xs">
-          <thead class="bg-slate-800 text-slate-300 font-semibold uppercase tracking-wider sticky top-0">
-            <tr>
-              <th class="p-2.5">Waktu</th>
-              <th class="p-2.5">Nama Siswa</th>
-              <th class="p-2.5">Kelas</th>
-              <th class="p-2.5 text-center">Pelanggaran</th>
-              <th class="p-2.5 text-center">Status</th>
-            </tr>
-          </thead>
-          <tbody id="monitoringTableBody" class="divide-y divide-slate-800/60 text-slate-300">
-            <tr>
-              <td colspan="5" class="p-6 text-center text-slate-500">Belum ada aktivitas siswa...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <div class="mt-4 pt-3 border-t border-slate-800 flex justify-between items-center text-xs text-slate-400 shrink-0">
-        <span>Total Siswa Terdaftar: <strong id="totalMasterCount" class="text-sman11-blue">0</strong></span>
-        <button onclick="clearMonitoringLog()" class="text-red-400 hover:text-red-300 text-xs flex items-center gap-1">
-          <i class="fa-solid fa-trash"></i> Bersihkan Log Monitoring
-        </button>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- MODAL PASTE MASTER DATA EXCEL -->
-  <div id="importStudentModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9000] flex items-center justify-center p-4">
-    <div class="bg-sman11-card border border-slate-700 w-full max-w-lg rounded-2xl p-6 shadow-2xl text-left">
-      <div class="flex items-center justify-between mb-3">
-        <h3 class="text-lg font-bold text-white flex items-center gap-2">
-          <i class="fa-solid fa-file-excel text-sman11-green"></i>
-          Import Data Absen Excel TP 2026-2027
-        </h3>
-        <button onclick="closeImportModal()" class="text-slate-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
-      </div>
-      <p class="text-xs text-slate-400 mb-3">
-        Buka file Excel di laptop, blok/copy sel baris siswa (`No`, `NIS`, `NISN`, `Nama`, `JK`, `Kelas`) lalu <strong class="text-sman11-green">Paste (Ctrl+V)</strong> langsung di bawah ini.
-      </p>
-
-      <textarea id="csvTextArea" rows="7" placeholder="Tempel/Paste langsung dari Excel di sini...&#10;&#10;Contoh hasil paste dari Excel:&#10;1	242510256	0097254302	AGNI ALISYA ANNAFI	P	XII 1&#10;2	242510111	0094225911	ALEISYA KAUREEN ANDITIAN	P	XII 1&#10;3	242510258	0085499895	ALIF OKANZA PUTRA	L	XII 1" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs text-white font-mono placeholder-slate-600 focus:outline-none focus:border-sman11-blue mb-4"></textarea>
-
-      <div class="flex items-center justify-between gap-2">
-        <button onclick="clearMasterStudents()" class="bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-semibold px-3 py-2 rounded-xl border border-red-500/30">
-          <i class="fa-solid fa-trash mr-1"></i> Hapus Data Master
-        </button>
-        <div class="flex gap-2">
-          <button onclick="closeImportModal()" class="bg-slate-800 text-slate-300 px-4 py-2 rounded-xl text-xs font-semibold">Batal</button>
-          <button onclick="saveMasterStudents()" class="bg-sman11-green hover:bg-emerald-500 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold transition">Simpan & Auto-Fill Siswa</button>
+      <!-- MONITORING TABLE -->
+      <div class="space-y-2">
+        <div class="flex justify-between items-center">
+          <h4 class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Pemantauan Pelanggaran Real-time</h4>
+          <button onclick="clearLogs()" class="text-[11px] text-red-400 hover:underline">Clear Logs</button>
+        </div>
+        <div class="bg-slate-950 border border-slate-800 rounded-xl overflow-hidden max-h-48 overflow-y-auto custom-scrollbar">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-800/50 text-slate-400 text-[11px] uppercase border-b border-slate-800 sticky top-0">
+              <tr>
+                <th class="p-2.5">Waktu</th>
+                <th class="p-2.5">Kelas</th>
+                <th class="p-2.5">Nama Siswa</th>
+                <th class="p-2.5 text-center">Pelanggaran</th>
+              </tr>
+            </thead>
+            <tbody id="monitoringTableBody" class="divide-y divide-slate-800/50">
+              <tr>
+                <td colspan="4" class="p-4 text-center text-slate-500">Belum ada aktivitas ujian.</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- MODAL AUTHENTIKASI PIN GURU -->
-  <div id="pinModal" class="hidden fixed inset-0 bg-slate-950/80 backdrop-blur-md z-[9500] flex items-center justify-center p-4">
-    <div class="bg-sman11-card border border-slate-700 w-full max-w-xs rounded-2xl p-6 shadow-2xl text-center">
-      <div class="w-12 h-12 bg-sman11-blue/20 text-sman11-blue rounded-full flex items-center justify-center mx-auto mb-3 text-xl">
-        <i class="fa-solid fa-key"></i>
-      </div>
-      <h3 class="text-base font-bold text-white mb-1">Akses Dashboard Guru</h3>
-      <p class="text-xs text-slate-400 mb-4">Masukkan PIN Akses Guru</p>
-      
-      <input type="password" id="inputTeacherPin" maxlength="6" placeholder="PIN..." class="w-full bg-slate-900 border border-slate-700 text-center text-lg tracking-widest rounded-xl py-2 text-white focus:outline-none focus:border-sman11-blue mb-4">
-      
-      <div class="flex gap-2">
-        <button onclick="closePinModal()" class="w-1/2 bg-slate-800 text-slate-300 py-2 rounded-xl text-xs font-semibold">Batal</button>
-        <button onclick="verifyTeacherPin()" class="w-1/2 bg-sman11-blue text-slate-950 font-bold py-2 rounded-xl text-xs">Masuk</button>
+  <!-- TEXT PASTE IMPORT MODAL -->
+  <div id="textImportModal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-lg w-full p-5 shadow-2xl space-y-4">
+      <h3 class="text-sm font-bold text-white">Paste Teks Data Excel</h3>
+      <p class="text-xs text-slate-400">Blok kolom NAMA dan KELAS di Excel, lalu Paste (Ctrl+V) di bawah ini:</p>
+      <textarea id="rawExcelPasteInput" rows="6" placeholder="AGNI ALISYA ANNAFI&#10003;XII 1&#10003;&#10145; ALEISYA KAUREEN&#10003;XII 1" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-200 focus:outline-none focus:border-sky-500 font-mono"></textarea>
+      <div class="flex justify-end gap-2">
+        <button onclick="closeTextImportModal()" class="px-4 py-2 bg-slate-800 text-slate-300 rounded-xl text-xs font-medium">Batal</button>
+        <button onclick="processRawTextImport()" class="px-4 py-2 bg-emerald-500 text-slate-950 font-bold rounded-xl text-xs">Simpan & Merge Data</button>
       </div>
     </div>
   </div>
 
-  <!-- FOOTER SMAN 11 BANDUNG -->
-  <footer class="py-4 text-center text-xs text-slate-500 border-t border-slate-800/80 mt-auto">
-    <p>&copy; 2026 ms.T SMAN 11 Bandung</p>
+  <!-- FOOTER -->
+  <footer class="text-center py-4 text-xs text-slate-600">
+    © 2026 ms.T SMAN 11 Bandung
   </footer>
 
-  <!-- AUDIO ELEMENT ALARM + FALLBACK WEB AUDIO API -->
-  <audio id="sirenAudio" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto" loop></audio>
+  <!-- AUDIO ALARM SYSTEM -->
+  <audio id="sirenAudio" loop src="https://actions.google.com/sounds/v1/emergency/beeping_emergency_synth.ogg"></audio>
 
+  <!-- JAVASCRIPT LOGIC -->
   <script>
-    // GLOBAL STATE VARIABLES
-    let currentStudent = { nama: '', kelas: '' };
+    // GLOBAL CONFIG & STATE
+    const TEACHER_PIN = "2310";
+    let masterStudents = JSON.parse(localStorage.getItem('sman11_master_students') || '[]');
+    let currentGFormUrl = localStorage.getItem('sman11_gform_url') || 'https://docs.google.com/forms/';
+    let activeStudent = null;
     let violationCount = 0;
-    const maxViolations = 3;
     let isExamActive = false;
-    let monitoringList = [];
 
-    // AUDIO SIREN LOGIC
-    const sirenAudio = document.getElementById('sirenAudio');
-    let audioCtx = null;
-
-    function playAlarmSound() {
-      try {
-        sirenAudio.currentTime = 0;
-        sirenAudio.play().catch(err => {
-          playSynthBeep();
-        });
-      } catch(e) {
-        playSynthBeep();
-      }
-    }
-
-    function stopAlarmSound() {
-      try {
-        sirenAudio.pause();
-        sirenAudio.currentTime = 0;
-      } catch(e){}
-    }
-
-    function playSynthBeep() {
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(880, audioCtx.currentTime); // A5
-      gain.gain.setValueAtTime(0.3, audioCtx.currentTime);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + 1.2);
-    }
-
-    // HANDLE START EXAM
-    window.handleStartExam = function(e) {
-      e.preventDefault();
+    // INITIALIZATION
+    window.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('gformUrlInput').value = currentGFormUrl;
+      updateMasterStudentCountDisplay();
       
-      const nama = document.getElementById('inputNama').value.trim();
-      const kelas = document.getElementById('inputKelas').value;
-
-      if (!kelas || !nama) {
-        return alert("Mohon pilih Kelas dan Nama terlebih dahulu!");
-      }
-
-      currentStudent = { nama, kelas };
-      document.getElementById('displayStudentInfo').innerText = `Siswa: ${nama} (${kelas})`;
-
-      // Request Fullscreen
-      requestFullScreenMode();
-
-      // Show Exam Container
-      document.getElementById('startScreen').classList.add('hidden');
-      document.getElementById('examContainer').classList.remove('hidden');
-
-      isExamActive = true;
-      violationCount = 0;
-      updateViolationDisplay();
-
-      // Load Form URL from LocalStorage if set
-      const savedFormUrl = localStorage.getItem("sman11_form_url");
-      if (savedFormUrl) {
-        document.getElementById('googleFormIframe').src = savedFormUrl;
-      }
-
-      // Record student start to monitoring log
-      recordLogToMonitoring("Memulai Ujian", 0);
-
-      // Activate Anti-Cheat Listeners
-      enableAntiCheatSystem();
-    };
-
-    function requestFullScreenMode() {
-      const elem = document.documentElement;
-      if (elem.requestFullscreen) {
-        elem.requestFullscreen().catch(()=>{});
-      } else if (elem.webkitRequestFullscreen) {
-        elem.webkitRequestFullscreen();
-      }
-    }
-
-    // ANTI-CHEAT ENGINE
-    function enableAntiCheatSystem() {
-      // 1. Detect Tab Switch / Minimize Browser
-      document.addEventListener("visibilitychange", function() {
-        if (document.hidden && isExamActive) {
-          triggerCheatWarning("Siswa berpindah tab / meninggalkan browser");
+      // Close dropdown when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#studentName') && !e.target.closest('#suggestionBox')) {
+          hideSuggestions();
         }
       });
+    });
 
-      // 2. Detect Loss of Window Focus (Akurat: Mengabaikan klik saat menjawab Google Form)
-      window.addEventListener("blur", function() {
-        if (!isExamActive) return;
-
-        // Beri jeda singkat untuk mengecek apakah fokus berpindah ke dalam Google Form
-        setTimeout(() => {
-          const activeEl = document.activeElement;
-          const iframeEl = document.getElementById('googleFormIframe');
-
-          // Jika fokus berada di dalam iframe Google Form, JANGAN anggap pelanggaran!
-          if (activeEl === iframeEl || (activeEl && activeEl.tagName === 'IFRAME')) {
-            return;
-          }
-
-          // Jika tab tersembunyi, sudah ditangani oleh visibilitychange
-          if (document.hidden) return;
-
-          // Jika fokus benar-benar pindah ke aplikasi luar/jendela lain
-          triggerCheatWarning("Siswa membuka aplikasi / jendela lain");
-        }, 150);
-      });
-
-      // 3. Detect Exit Fullscreen
-      document.addEventListener("fullscreenchange", function() {
-        if (!document.fullscreenElement && isExamActive) {
-          triggerCheatWarning("Siswa keluar dari mode Layar Penuh (Fullscreen)");
-        }
-      });
-
-      // 4. Block Right Click & Copy-Paste
-      document.addEventListener("contextmenu", e => { if(isExamActive) e.preventDefault(); });
-      document.addEventListener("copy", e => { if(isExamActive) e.preventDefault(); });
-      document.addEventListener("paste", e => { if(isExamActive) e.preventDefault(); });
+    // MASTER STUDENT COUNT DISPLAY
+    function updateMasterStudentCountDisplay() {
+      document.getElementById('masterStudentCount').innerText = `Total: ${masterStudents.length} siswa`;
     }
 
-    function triggerCheatWarning(reason) {
-      if (!isExamActive) return;
-
-      // Cegah alarm bertumpuk jika modal peringatan sudah terbuka
-      const modal = document.getElementById('warningModal');
-      if (modal && !modal.classList.contains('hidden')) return;
-
-      violationCount++;
-      updateViolationDisplay();
-
-      // Play Siren Audio
-      playAlarmSound();
-
-      // Display Warning Modal
-      document.getElementById('modalViolText').innerText = violationCount;
-      document.getElementById('warningModal').classList.remove('hidden');
-
-      // Record violation
-      recordLogToMonitoring(`Melanggar: ${reason}`, violationCount);
-
-      if (violationCount >= maxViolations) {
-        setTimeout(() => {
-          alert("Batas maksimum 3 kali pelanggaran telah terlampaui! Ujian Anda dikunci.");
-          location.reload();
-        }, 500);
-      }
+    // HANDLE CLASS CHANGE & FILTER NAMA
+    function handleClassChange() {
+      document.getElementById('studentName').value = '';
+      hideSuggestions();
     }
 
-    window.closeWarningModal = function() {
-      stopAlarmSound();
-      document.getElementById('warningModal').classList.add('hidden');
-      requestFullScreenMode();
-    };
+    // TOUCH & SEARCH FRIENDLY SUGGESTION SYSTEM
+    function handleNameInput() {
+      const selectedClass = document.getElementById('studentClass').value;
+      const query = document.getElementById('studentName').value.toLowerCase().trim();
+      const suggestionBox = document.getElementById('suggestionBox');
 
-    function updateViolationDisplay() {
-      document.getElementById('studentViolCount').innerText = violationCount;
-    }
-
-    // MONITORING & LOGGING LOGIC
-    function recordLogToMonitoring(action, viol) {
-      const logItem = {
-        waktu: new Date().toLocaleTimeString('id-ID'),
-        nama: currentStudent.nama,
-        kelas: currentStudent.kelas,
-        pelanggaran: viol,
-        status: action
-      };
-
-      let logs = JSON.parse(localStorage.getItem("sman11_monitoring_logs") || "[]");
-      const existingIdx = logs.findIndex(l => l.nama === currentStudent.nama && l.kelas === currentStudent.kelas);
-      if (existingIdx >= 0) {
-        logs[existingIdx] = logItem;
-      } else {
-        logs.unshift(logItem);
-      }
-
-      localStorage.setItem("sman11_monitoring_logs", JSON.stringify(logs));
-      renderMonitoringTable();
-    }
-
-    function renderMonitoringTable() {
-      const tbody = document.getElementById('monitoringTableBody');
-      if (!tbody) return;
-
-      const logs = JSON.parse(localStorage.getItem("sman11_monitoring_logs") || "[]");
-      if (logs.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-500">Belum ada aktivitas siswa...</td></tr>`;
+      if (!selectedClass) {
+        suggestionBox.innerHTML = `<div class="p-3 text-xs text-amber-400">Silakan pilih kelas terlebih dahulu!</div>`;
+        suggestionBox.classList.remove('hidden');
         return;
       }
 
-      tbody.innerHTML = logs.map(l => `
-        <tr class="${l.pelanggaran > 0 ? 'bg-red-500/10 text-red-300' : 'hover:bg-slate-800/40'}">
-          <td class="p-2.5 font-mono text-[11px]">${l.waktu}</td>
-          <td class="p-2.5 font-bold">${l.nama}</td>
-          <td class="p-2.5">${l.kelas}</td>
-          <td class="p-2.5 text-center font-extrabold ${l.pelanggaran > 0 ? 'text-red-400' : 'text-emerald-400'}">${l.pelanggaran}</td>
-          <td class="p-2.5 text-center">
-            <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase ${l.pelanggaran > 0 ? 'bg-red-500/20 text-red-400 border border-red-500/30' : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'}">
-              ${l.status}
-            </span>
-          </td>
-        </tr>
-      `).join('');
+      const filtered = masterStudents.filter(s => {
+        const matchClass = s.kelas === selectedClass;
+        const matchName = !query || s.nama.toLowerCase().includes(query);
+        return matchClass && matchName;
+      });
+
+      if (filtered.length === 0) {
+        suggestionBox.innerHTML = `<div class="p-3 text-xs text-slate-500">Tidak ada nama yang cocok. Ketik manual jika belum terdaftar.</div>`;
+      } else {
+        suggestionBox.innerHTML = filtered.map(s => `
+          <div onclick="selectStudentName('${s.nama}')" class="p-3 text-xs text-slate-200 hover:bg-sky-500/20 hover:text-sky-300 cursor-pointer transition flex justify-between items-center">
+            <span class="font-medium">${s.nama}</span>
+            <span class="text-[10px] text-slate-500 bg-slate-800 px-1.5 py-0.5 rounded">${s.kelas}</span>
+          </div>
+        `).join('');
+      }
+
+      suggestionBox.classList.remove('hidden');
     }
 
-    window.clearMonitoringLog = function() {
-      if (confirm("Bersihkan seluruh catatan monitoring ujian?")) {
-        localStorage.removeItem("sman11_monitoring_logs");
-        renderMonitoringTable();
-      }
-    };
+    function selectStudentName(name) {
+      document.getElementById('studentName').value = name;
+      hideSuggestions();
+    }
 
-    // MASTER STUDENT EXCEL PARSER
-    window.showImportModal = function() {
-      document.getElementById('importStudentModal').classList.remove('hidden');
-      const stored = localStorage.getItem("sman11_master_students");
-      if (stored) {
+    function hideSuggestions() {
+      document.getElementById('suggestionBox').classList.add('hidden');
+    }
+
+    // EXCEL DIRECT FILE UPLOAD PARSER (SHEETJS)
+    function handleExcelFileUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(e) {
         try {
-          const list = JSON.parse(stored);
-          document.getElementById('csvTextArea').value = list.map(s => `${s.nama}\t${s.kelas}`).join("\n");
-        } catch(e){}
-      }
-    };
+          const data = new Uint8Array(e.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          let parsedStudents = [];
 
-    window.closeImportModal = function() {
-      document.getElementById('importStudentModal').classList.add('hidden');
-    };
-
-    window.saveMasterStudents = function() {
-      const rawText = document.getElementById('csvTextArea').value.trim();
-      if (!rawText) return alert("Silakan paste/tempel data dari Excel terlebih dahulu!");
-
-      const lines = rawText.split("\n");
-      const masterList = [];
-
-      lines.forEach(line => {
-        if (!line.trim()) return;
-        
-        let parts = line.split(/[\t,;]+/).map(p => p.trim()).filter(p => p !== '');
-        const lineUpper = line.toUpperCase();
-        // Skip header lines
-        if (lineUpper.includes("NAMA") || lineUpper.includes("NISN") || lineUpper.includes("DAFTAR HADIR") || (lineUpper.includes("NO.") && lineUpper.includes("NIS"))) return;
-
-        if (parts.length >= 2) {
-          let nama = '', kelas = '';
-
-          parts.forEach(part => {
-            const upper = part.toUpperCase();
+          workbook.SheetNames.forEach(sheetName => {
+            const worksheet = workbook.Sheets[sheetName];
+            const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
             
-            // Detect class (e.g., XII 1, XII 12, 12 MIPA 1, etc.)
-            if (/^(XII|12)\s*[\.-]?\s*\d+$/i.test(part) || /^12\s*(MIPA|IPS|MBL|IPA)\s*\d+$/i.test(part) || /^XII\s*(MIPA|IPS|MBL|IPA)\s*\d+$/i.test(part)) {
-              let match = part.match(/\d+/);
-              if (match) {
-                kelas = `XII ${match[0]}`;
-              } else {
-                kelas = upper;
+            rows.forEach(row => {
+              if (!row || row.length < 2) return;
+              
+              // Find name and class columns
+              let nameVal = "", classVal = "";
+              row.forEach(cell => {
+                if (!cell) return;
+                const str = String(cell).trim();
+                if (/^XII\s?\d+$/i.test(str)) {
+                  classVal = str.toUpperCase();
+                } else if (str.length > 2 && !/^\d+$/.test(str) && !/L|P/i.test(str) && str.toUpperCase() !== "NAMA" && str.toUpperCase() !== "KELAS") {
+                  nameVal = str.toUpperCase();
+                }
+              });
+
+              if (nameVal && classVal) {
+                parsedStudents.push({ nama: nameVal, kelas: classVal });
               }
-            } 
-            // Detect student full name (ignore numbers, headers, and 'L' / 'P')
-            else if (!/^\d+$/.test(part) && upper !== 'L' && upper !== 'P' && upper !== 'NO.' && upper !== 'JK' && upper !== 'NIS' && upper !== 'NISN') {
-              if (!nama) nama = part;
-            }
+            });
           });
 
-          if (nama) {
-            masterList.push({
-              nama: nama,
-              kelas: kelas || 'XII 1'
-            });
+          if (parsedStudents.length > 0) {
+            mergeMasterStudents(parsedStudents);
+            alert(`Berhasil mengimpor ${parsedStudents.length} siswa dari file Excel!`);
+          } else {
+            alert('Format tabel Excel tidak dikenali. Pastikan terdapat kolom NAMA dan KELAS (XII 1 - XII 12).');
           }
+        } catch (err) {
+          alert('Gagal membaca file Excel: ' + err.message);
+        }
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    // RAW TEXT IMPORT / COPAS
+    function openTextImportModal() {
+      document.getElementById('textImportModal').classList.remove('hidden');
+    }
+    function closeTextImportModal() {
+      document.getElementById('textImportModal').classList.add('hidden');
+    }
+
+    function processRawTextImport() {
+      const text = document.getElementById('rawExcelPasteInput').value;
+      if (!text.trim()) return;
+
+      const lines = text.split('\n');
+      let parsed = [];
+
+      lines.forEach(line => {
+        const parts = line.split('\t');
+        let nameVal = "", classVal = "";
+
+        parts.forEach(part => {
+          const str = part.trim();
+          if (/^XII\s?\d+$/i.test(str)) {
+            classVal = str.toUpperCase();
+          } else if (str.length > 2 && !/^\d+$/.test(str) && str.toUpperCase() !== "NAMA" && str.toUpperCase() !== "KELAS") {
+            nameVal = str.toUpperCase();
+          }
+        });
+
+        if (nameVal && classVal) {
+          parsed.push({ nama: nameVal, kelas: classVal });
         }
       });
 
-      if (masterList.length === 0) {
-        return alert("Format Excel tidak terbaca. Pastikan Anda meng-copy baris data di Excel lalu Paste langsung ke kolom ini!");
-      }
-
-      localStorage.setItem("sman11_master_students", JSON.stringify(masterList));
-      alert(`Berhasil mengimpor ${masterList.length} siswa dari Excel Daftar Hadir!`);
-      closeImportModal();
-      updateStudentDatalist();
-    };
-
-    window.clearMasterStudents = function() {
-      if (confirm("Hapus seluruh data master siswa yang tersimpan?")) {
-        localStorage.removeItem("sman11_master_students");
-        document.getElementById('csvTextArea').value = '';
-        updateStudentDatalist();
-        alert("Data master siswa berhasil dihapus.");
-      }
-    };
-
-    window.onClassSelected = function(selectedClass) {
-      updateStudentDatalist(selectedClass);
-      document.getElementById('inputNama').value = '';
-    };
-
-    function updateStudentDatalist(filterClass = '') {
-      const datalist = document.getElementById('studentMasterList');
-      if (!datalist) return;
-      datalist.innerHTML = '';
-      
-      const stored = localStorage.getItem("sman11_master_students");
-      if (stored) {
-        try {
-          const list = JSON.parse(stored);
-          document.getElementById('totalMasterCount').innerText = list.length;
-          
-          let filtered = list;
-          if (filterClass) {
-            let numMatch = filterClass.match(/\d+/);
-            let targetNum = numMatch ? numMatch[0] : null;
-
-            filtered = list.filter(s => {
-              if (s.kelas.toUpperCase() === filterClass.toUpperCase()) return true;
-              if (targetNum && s.kelas.endsWith(` ${targetNum}`)) return true;
-              return false;
-            });
-          }
-
-          filtered.forEach(s => {
-            const opt = document.createElement('option');
-            opt.value = s.nama;
-            opt.label = s.kelas;
-            datalist.appendChild(opt);
-          });
-        } catch(e){}
+      if (parsed.length > 0) {
+        mergeMasterStudents(parsed);
+        closeTextImportModal();
+        alert(`Berhasil menambahkan ${parsed.length} data siswa!`);
+      } else {
+        alert('Data tidak valid. Pastikan Anda mengopi kolom Nama dan Kelas dari Excel.');
       }
     }
 
-    window.autoFillStudentDetails = function(selectedName) {
-      const stored = localStorage.getItem("sman11_master_students");
-      if (!stored) return;
-      try {
-        const list = JSON.parse(stored);
-        const match = list.find(s => s.nama.toLowerCase() === selectedName.toLowerCase());
-        if (match) {
-          const selectKelas = document.getElementById('inputKelas');
-          
-          let targetKelas = match.kelas.toUpperCase();
-          let numMatch = targetKelas.match(/\d+/);
-          let targetNum = numMatch ? numMatch[0] : null;
+    // MERGE & SAVE MASTER DATA
+    function mergeMasterStudents(newStudents) {
+      const studentMap = new Map();
+      masterStudents.forEach(s => studentMap.set(`${s.nama}_${s.kelas}`, s));
+      newStudents.forEach(s => studentMap.set(`${s.nama}_${s.kelas}`, s));
+      
+      masterStudents = Array.from(studentMap.values());
+      localStorage.setItem('sman11_master_students', JSON.stringify(masterStudents));
+      updateMasterStudentCountDisplay();
+    }
 
-          for (let option of selectKelas.options) {
-            if (option.value.toUpperCase() === targetKelas) {
-              option.selected = true;
-              break;
-            } else if (targetNum && option.value.endsWith(` ${targetNum}`)) {
-              option.selected = true;
-              break;
-            }
-          }
+    // START EXAM LOGIC
+    function handleStartExam(e) {
+      e.preventDefault();
+      const name = document.getElementById('studentName').value.trim();
+      const cls = document.getElementById('studentClass').value;
+
+      if (!name || !cls) {
+        alert('Mohon lengkapi Kelas dan Nama Anda.');
+        return;
+      }
+
+      activeStudent = { nama: name, kelas: cls };
+      document.getElementById('activeStudentName').innerText = name;
+      document.getElementById('activeStudentClass').innerText = cls;
+
+      // Load Google Form
+      document.getElementById('examIframe').src = currentGFormUrl;
+      document.getElementById('examScreen').classList.remove('hidden');
+      document.getElementById('examScreen').classList.add('flex');
+
+      // Request Fullscreen
+      requestFullScreen();
+      isExamActive = true;
+      violationCount = 0;
+
+      // Start Security Monitoring
+      setupSecurityListeners();
+    }
+
+    // FULLSCREEN HANDLER
+    function requestFullScreen() {
+      const elem = document.documentElement;
+      if (elem.requestFullscreen) elem.requestFullscreen();
+      else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
+    }
+
+    // ANTI-CHEAT SECURITY LISTENERS
+    let iframeHasFocus = false;
+
+    function setupSecurityListeners() {
+      window.addEventListener('blur', handleWindowBlur);
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden && isExamActive) {
+          triggerViolation();
         }
-      } catch(e){}
-    };
+      });
 
-    // TEACHER DASHBOARD PIN AUTHENTICATION
-    window.showTeacherPinModal = function() {
-      document.getElementById('pinModal').classList.remove('hidden');
-      document.getElementById('inputTeacherPin').focus();
-    };
+      // Monitor focus for Google Form iframe
+      setInterval(() => {
+        if (document.activeElement === document.getElementById('examIframe')) {
+          iframeHasFocus = true;
+        } else {
+          iframeHasFocus = false;
+        }
+      }, 500);
+    }
 
-    window.closePinModal = function() {
-      document.getElementById('pinModal').classList.add('hidden');
-      document.getElementById('inputTeacherPin').value = '';
-    };
+    function handleWindowBlur() {
+      if (!isExamActive) return;
+      setTimeout(() => {
+        if (!iframeHasFocus && isExamActive) {
+          triggerViolation();
+        }
+      }, 200);
+    }
 
-    window.verifyTeacherPin = function() {
-      const pin = document.getElementById('inputTeacherPin').value;
-      if (pin === "2310") {
-        closePinModal();
+    // VIOLATION HANDLING
+    function triggerViolation() {
+      if (!isExamActive) return;
+      violationCount++;
+      document.getElementById('violationCountText').innerText = violationCount;
+      document.getElementById('violationModal').classList.remove('hidden');
+      
+      // Play Siren Alarm Audio
+      const siren = document.getElementById('sirenAudio');
+      siren.play().catch(() => {});
+
+      // Log Violation to Monitoring Table
+      logViolationToTable(activeStudent.kelas, activeStudent.nama, violationCount);
+    }
+
+    function dismissViolation() {
+      document.getElementById('violationModal').classList.add('hidden');
+      const siren = document.getElementById('sirenAudio');
+      siren.pause();
+      siren.currentTime = 0;
+      requestFullScreen();
+    }
+
+    function confirmExitExam() {
+      if (confirm('Apakah Anda yakin telah selesai mengerjakan ujian?')) {
+        isExamActive = false;
+        document.getElementById('examScreen').classList.add('hidden');
+        document.getElementById('examIframe').src = 'about:blank';
+        if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+        alert('Terima kasih, jawaban Anda telah tersimpan.');
+      }
+    }
+
+    // TEACHER AUTH & DASHBOARD
+    function openTeacherAuth() {
+      document.getElementById('teacherAuthModal').classList.remove('hidden');
+      document.getElementById('teacherPinInput').focus();
+    }
+    function closeTeacherAuth() {
+      document.getElementById('teacherAuthModal').classList.add('hidden');
+      document.getElementById('teacherPinInput').value = '';
+    }
+    function verifyTeacherPin() {
+      const pin = document.getElementById('teacherPinInput').value;
+      if (pin === TEACHER_PIN) {
+        closeTeacherAuth();
         document.getElementById('teacherDashboardModal').classList.remove('hidden');
-        renderMonitoringTable();
-        
-        const savedUrl = localStorage.getItem("sman11_form_url");
-        if (savedUrl) {
-          document.getElementById('inputFormUrl').value = savedUrl;
-        }
       } else {
-        alert("PIN Guru salah! Silakan coba lagi.");
+        alert('PIN Salah!');
       }
-    };
-
-    window.closeTeacherDashboard = function() {
+    }
+    function closeTeacherDashboard() {
       document.getElementById('teacherDashboardModal').classList.add('hidden');
-    };
+    }
 
-    window.saveFormUrl = function() {
-      const url = document.getElementById('inputFormUrl').value.trim();
-      if (!url.startsWith('http')) {
-        return alert("Masukkan URL Google Form yang valid (diawali http:// atau https://)");
+    function saveGFormUrl() {
+      const url = document.getElementById('gformUrlInput').value.trim();
+      if (url) {
+        currentGFormUrl = url;
+        localStorage.setItem('sman11_gform_url', url);
+        alert('Link Google Form Ujian berhasil disimpan!');
       }
-      localStorage.setItem("sman11_form_url", url);
-      document.getElementById('googleFormIframe').src = url;
-      alert("URL Google Form Ujian berhasil diperbarui!");
-    };
+    }
 
-    // Initialize datalist on load
-    window.onload = function() {
-      updateStudentDatalist();
-    };
+    function logViolationToTable(cls, name, count) {
+      const tbody = document.getElementById('monitoringTableBody');
+      const timeStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+      
+      if (tbody.children[0] && tbody.children[0].children.length === 1) {
+        tbody.innerHTML = '';
+      }
+
+      const row = document.createElement('tr');
+      row.className = 'hover:bg-slate-900/50';
+      row.innerHTML = `
+        <td class="p-2.5 text-slate-500">${timeStr}</td>
+        <td class="p-2.5 font-semibold text-sky-400">${cls}</td>
+        <td class="p-2.5 text-slate-200">${name}</td>
+        <td class="p-2.5 text-center font-bold text-red-400">${count}x</td>
+      `;
+      tbody.prepend(row);
+    }
+
+    function clearLogs() {
+      document.getElementById('monitoringTableBody').innerHTML = `
+        <tr>
+          <td colspan="4" class="p-4 text-center text-slate-500">Belum ada aktivitas ujian.</td>
+        </tr>
+      `;
+    }
   </script>
 </body>
 </html>
