@@ -415,11 +415,26 @@
         }
       });
 
-      // 2. Detect Loss of Window Focus
+      // 2. Detect Loss of Window Focus (Akurat: Mengabaikan klik saat menjawab Google Form)
       window.addEventListener("blur", function() {
-        if (isExamActive) {
+        if (!isExamActive) return;
+
+        // Beri jeda singkat untuk mengecek apakah fokus berpindah ke dalam Google Form
+        setTimeout(() => {
+          const activeEl = document.activeElement;
+          const iframeEl = document.getElementById('googleFormIframe');
+
+          // Jika fokus berada di dalam iframe Google Form, JANGAN anggap pelanggaran!
+          if (activeEl === iframeEl || (activeEl && activeEl.tagName === 'IFRAME')) {
+            return;
+          }
+
+          // Jika tab tersembunyi, sudah ditangani oleh visibilitychange
+          if (document.hidden) return;
+
+          // Jika fokus benar-benar pindah ke aplikasi luar/jendela lain
           triggerCheatWarning("Siswa membuka aplikasi / jendela lain");
-        }
+        }, 150);
       });
 
       // 3. Detect Exit Fullscreen
@@ -437,6 +452,10 @@
 
     function triggerCheatWarning(reason) {
       if (!isExamActive) return;
+
+      // Cegah alarm bertumpuk jika modal peringatan sudah terbuka
+      const modal = document.getElementById('warningModal');
+      if (modal && !modal.classList.contains('hidden')) return;
 
       violationCount++;
       updateViolationDisplay();
