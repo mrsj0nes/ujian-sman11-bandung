@@ -561,32 +561,50 @@
       else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
     }
 
-    let iframeHasFocus = false;
+    // SECURITY MONITORING DENGAN PENANGANAN IFRAME GOOGLE FORM
+    let isIframeFocused = false;
 
     function setupSecurityListeners() {
       window.addEventListener('blur', handleWindowBlur);
+
       document.addEventListener('visibilitychange', () => {
         if (document.hidden && isExamActive) {
           triggerViolation();
         }
       });
 
+      // Deteksi terus-menerus apakah elemen aktif ada di dalam iframe Google Form
       setInterval(() => {
-        if (document.activeElement === document.getElementById('examIframe')) {
-          iframeHasFocus = true;
-        } else {
-          iframeHasFocus = false;
+        const activeElem = document.activeElement;
+        const iframe = document.getElementById('examIframe');
+        if (activeElem === iframe || activeElem?.tagName === 'IFRAME') {
+          isIframeFocused = true;
         }
-      }, 500);
+      }, 200);
+
+      window.addEventListener('focus', () => {
+        isIframeFocused = false;
+      });
     }
 
     function handleWindowBlur() {
       if (!isExamActive) return;
+
+      // Berikan delay kecil untuk memastikan blur bukan karena interaksi di dalam Google Form
       setTimeout(() => {
-        if (!iframeHasFocus && isExamActive) {
+        const activeElem = document.activeElement;
+        const iframe = document.getElementById('examIframe');
+
+        // Jika fokus pindah ke iframe Google Form, abaikan peringatan
+        if (isIframeFocused || activeElem === iframe || activeElem?.tagName === 'IFRAME') {
+          return;
+        }
+
+        // Jika benar-benar keluar dari halaman/pindah tab/pindah aplikasi
+        if (document.hidden || !document.hasFocus()) {
           triggerViolation();
         }
-      }, 200);
+      }, 300);
     }
 
     function triggerViolation() {
