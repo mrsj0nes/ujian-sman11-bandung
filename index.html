@@ -153,8 +153,9 @@
       </div>
     </div>
 
+    <!-- IFRAME GOOGLE FORM -->
     <div class="flex-1 w-full h-full relative bg-white">
-      <iframe id="examIframe" src="about:blank" class="w-full h-full border-0"></iframe>
+      <iframe id="examIframe" src="about:blank" allow="autoplay; camera; microphone; geolocation; forms" class="w-full h-full border-0"></iframe>
     </div>
   </div>
 
@@ -315,7 +316,6 @@
           }
         });
 
-        // Realtime Monitoring Pelanggaran Guru
         db.collection("violations").orderBy("timestamp", "desc").limit(30).onSnapshot((snapshot) => {
           const tbody = document.getElementById('monitoringTableBody');
           if (!snapshot || snapshot.empty) {
@@ -350,7 +350,6 @@
       document.getElementById('masterStudentCount').innerText = `Total: ${masterStudents.length} siswa`;
     }
 
-    // FETTCH DATA SISWA LANGSUNG DARI FIREBASE SETIAP KELAS DIPILIH
     async function handleClassChange() {
       document.getElementById('studentName').value = '';
       hideSuggestions();
@@ -365,7 +364,6 @@
             const fetchedClassStudents = [];
             snapshot.forEach(doc => fetchedClassStudents.push(doc.data()));
             
-            // Merge ke local storage
             const map = new Map();
             masterStudents.forEach(s => map.set(`${s.nama}_${s.kelas}`, s));
             fetchedClassStudents.forEach(s => map.set(`${s.nama}_${s.kelas}`, s));
@@ -507,7 +505,6 @@
       }
     }
 
-    // DISIMPAN SEBAGAI DOKUMEN INDIVIDUAL DI FIRESTORE
     async function mergeMasterStudents(newStudents) {
       const map = new Map();
       masterStudents.forEach(s => map.set(`${s.nama}_${s.kelas}`, s));
