@@ -10,7 +10,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <!-- SheetJS CDN for reading Excel files directly -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <!-- Firebase App & Firestore App -->
+  <!-- Firebase App & Firestore App (Compat) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
@@ -96,7 +96,7 @@
           </div>
         </div>
 
-        <!-- STEP 2: SELECT NAMA (WITH TOUCH & SEARCH DROPDOWN) -->
+        <!-- STEP 2: SELECT NAMA -->
         <div class="relative">
           <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
             2. Nama Lengkap Siswa
@@ -217,11 +217,9 @@
       <div class="space-y-3 bg-slate-950/50 p-4 rounded-xl border border-slate-800">
         <div class="flex justify-between items-center">
           <label class="block text-xs font-semibold text-emerald-400 uppercase tracking-wider">Import Data Siswa (File Excel / Copas)</label>
-
           <span id="masterStudentCount" class="text-[11px] text-slate-400">Total: 0 siswa</span>
         </div>
         <div class="flex flex-col sm:flex-row gap-2">
-          <!-- DIRECT FILE EXCEL UPLOAD -->
           <label class="flex-1 cursor-pointer bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/30 rounded-xl p-3 text-center transition">
             <i class="fa-solid fa-file-excel text-emerald-400 text-lg mb-1 block"></i>
             <span class="text-xs text-emerald-300 font-medium block">Pilih File Excel (.xlsx / .xls)</span>
@@ -281,8 +279,29 @@
   <!-- AUDIO ALARM SYSTEM -->
   <audio id="sirenAudio" loop src="https://actions.google.com/sounds/v1/emergency/beeping_emergency_synth.ogg"></audio>
 
-  <!-- JAVASCRIPT LOGIC -->
+  <!-- JAVASCRIPT LOGIC WITH FIREBASE SYNC -->
   <script>
+    // FIREBASE CREDENTIALS FOR SMAN11-CBT PROJECT
+    const firebaseConfig = {
+      apiKey: "AIzaSyCRdKsg7TsoTgiyG88rvFRJQVHgP-32Mb8",
+      authDomain: "sman11-cbt.firebaseapp.com",
+      databaseURL: "https://sman11-cbt-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "sman11-cbt",
+      storageBucket: "sman11-cbt.firebasestorage.app",
+      messagingSenderId: "1075946461077",
+      appId: "1:1075946461077:web:3fc22df6a24a81a48c089c",
+      measurementId: "G-2HPHSENFC2"
+    };
+
+    // Initialize Firebase & Firestore
+    let db = null;
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.firestore();
+    } catch(err) {
+      console.warn("Firebase Init Warning:", err);
+    }
+
     // GLOBAL CONFIG & STATE
     const TEACHER_PIN = "2310";
     let masterStudents = JSON.parse(localStorage.getItem('sman11_master_students') || '[]');
@@ -291,11 +310,52 @@
     let violationCount = 0;
     let isExamActive = false;
 
-    // INITIALIZATION
+    // INITIALIZATION & REALTIME LISTENERS
     window.addEventListener('DOMContentLoaded', () => {
       document.getElementById('gformUrlInput').value = currentGFormUrl;
       updateMasterStudentCountDisplay();
       
+      // Load Data Siswa & Settings Realtime dari Cloud Firestore
+      if (db) {
+        db.collection("settings").doc("exam_config").onSnapshot((doc) => {
+          if (doc.exists && doc.data().gformUrl) {
+            currentGFormUrl = doc.data().gformUrl;
+            document.getElementById('gformUrlInput').value = currentGFormUrl;
+          }
+        });
+
+        db.collection("master_students").doc("all_students").onSnapshot((doc) => {
+          if (doc.exists && doc.data().list) {
+            masterStudents = doc.data().list;
+            localStorage.setItem('sman11_master_students', JSON.stringify(masterStudents));
+            updateMasterStudentCountDisplay();
+          }
+        });
+
+        // Realtime Monitoring Pelanggaran Guru
+        db.collection("violations").orderBy("timestamp", "desc").limit(30).onSnapshot((snapshot) => {
+          const tbody = document.getElementById('monitoringTableBody');
+          if (!snapshot || snapshot.empty) {
+            tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-500">Belum ada aktivitas ujian.</td></tr>`;
+            return;
+          }
+          tbody.innerHTML = '';
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            const timeStr = data.timestamp ? new Date(data.timestamp.toDate()).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '-';
+            const row = document.createElement('tr');
+            row.className = 'hover:bg-slate-900/50';
+            row.innerHTML = `
+              <td class="p-2.5 text-slate-500">${timeStr}</td>
+              <td class="p-2.5 font-semibold text-sky-400">${data.kelas}</td>
+              <td class="p-2.5 text-slate-200">${data.nama}</td>
+              <td class="p-2.5 text-center font-bold text-red-400">${data.count}x</td>
+            `;
+            tbody.appendChild(row);
+          });
+        });
+      }
+
       // Close dropdown when clicking outside
       document.addEventListener('click', (e) => {
         if (!e.target.closest('#studentName') && !e.target.closest('#suggestionBox')) {
@@ -304,18 +364,15 @@
       });
     });
 
-    // MASTER STUDENT COUNT DISPLAY
     function updateMasterStudentCountDisplay() {
       document.getElementById('masterStudentCount').innerText = `Total: ${masterStudents.length} siswa`;
     }
 
-    // HANDLE CLASS CHANGE & FILTER NAMA
     function handleClassChange() {
       document.getElementById('studentName').value = '';
       hideSuggestions();
     }
 
-    // TOUCH & SEARCH FRIENDLY SUGGESTION SYSTEM
     function handleNameInput() {
       const selectedClass = document.getElementById('studentClass').value;
       const query = document.getElementById('studentName').value.toLowerCase().trim();
@@ -356,7 +413,6 @@
       document.getElementById('suggestionBox').classList.add('hidden');
     }
 
-    // EXCEL DIRECT FILE UPLOAD PARSER (SHEETJS)
     function handleExcelFileUpload(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -374,8 +430,6 @@
             
             rows.forEach(row => {
               if (!row || row.length < 2) return;
-              
-              // Find name and class columns
               let nameVal = "", classVal = "";
               row.forEach(cell => {
                 if (!cell) return;
@@ -395,9 +449,9 @@
 
           if (parsedStudents.length > 0) {
             mergeMasterStudents(parsedStudents);
-            alert(`Berhasil mengimpor ${parsedStudents.length} siswa dari file Excel!`);
+            alert(`Berhasil mengimpor ${parsedStudents.length} siswa dan disinkronkan ke HP siswa!`);
           } else {
-            alert('Format tabel Excel tidak dikenali. Pastikan terdapat kolom NAMA dan KELAS (XII 1 - XII 12).');
+            alert('Format tabel Excel tidak dikenali. Pastikan terdapat kolom NAMA dan KELAS.');
           }
         } catch (err) {
           alert('Gagal membaca file Excel: ' + err.message);
@@ -406,7 +460,6 @@
       reader.readAsArrayBuffer(file);
     }
 
-    // RAW TEXT IMPORT / COPAS
     function openTextImportModal() {
       document.getElementById('textImportModal').classList.remove('hidden');
     }
@@ -444,11 +497,10 @@
         closeTextImportModal();
         alert(`Berhasil menambahkan ${parsed.length} data siswa!`);
       } else {
-        alert('Data tidak valid. Pastikan Anda mengopi kolom Nama dan Kelas dari Excel.');
+        alert('Data tidak valid.');
       }
     }
 
-    // MERGE & SAVE MASTER DATA
     function mergeMasterStudents(newStudents) {
       const studentMap = new Map();
       masterStudents.forEach(s => studentMap.set(`${s.nama}_${s.kelas}`, s));
@@ -457,9 +509,16 @@
       masterStudents = Array.from(studentMap.values());
       localStorage.setItem('sman11_master_students', JSON.stringify(masterStudents));
       updateMasterStudentCountDisplay();
+
+      // SIMPAN KE FIREBASE CLOUD AGAR AUTOMATIS DIBACA SELURUH HP SISWA
+      if (db) {
+        db.collection("master_students").doc("all_students").set({
+          list: masterStudents,
+          updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }).catch(err => console.error("Gagal sync ke Cloud:", err));
+      }
     }
 
-    // START EXAM LOGIC
     function handleStartExam(e) {
       e.preventDefault();
       const name = document.getElementById('studentName').value.trim();
@@ -474,28 +533,23 @@
       document.getElementById('activeStudentName').innerText = name;
       document.getElementById('activeStudentClass').innerText = cls;
 
-      // Load Google Form
       document.getElementById('examIframe').src = currentGFormUrl;
       document.getElementById('examScreen').classList.remove('hidden');
       document.getElementById('examScreen').classList.add('flex');
 
-      // Request Fullscreen
       requestFullScreen();
       isExamActive = true;
       violationCount = 0;
 
-      // Start Security Monitoring
       setupSecurityListeners();
     }
 
-    // FULLSCREEN HANDLER
     function requestFullScreen() {
       const elem = document.documentElement;
       if (elem.requestFullscreen) elem.requestFullscreen();
       else if (elem.webkitRequestFullscreen) elem.webkitRequestFullscreen();
     }
 
-    // ANTI-CHEAT SECURITY LISTENERS
     let iframeHasFocus = false;
 
     function setupSecurityListeners() {
@@ -506,7 +560,6 @@
         }
       });
 
-      // Monitor focus for Google Form iframe
       setInterval(() => {
         if (document.activeElement === document.getElementById('examIframe')) {
           iframeHasFocus = true;
@@ -525,19 +578,24 @@
       }, 200);
     }
 
-    // VIOLATION HANDLING
     function triggerViolation() {
       if (!isExamActive) return;
       violationCount++;
       document.getElementById('violationCountText').innerText = violationCount;
       document.getElementById('violationModal').classList.remove('hidden');
       
-      // Play Siren Alarm Audio
       const siren = document.getElementById('sirenAudio');
       siren.play().catch(() => {});
 
-      // Log Violation to Monitoring Table
-      logViolationToTable(activeStudent.kelas, activeStudent.nama, violationCount);
+      // Log ke Cloud Firebase
+      if (db) {
+        db.collection("violations").add({
+          nama: activeStudent.nama,
+          kelas: activeStudent.kelas,
+          count: violationCount,
+          timestamp: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
     }
 
     function dismissViolation() {
@@ -558,7 +616,6 @@
       }
     }
 
-    // TEACHER AUTH & DASHBOARD
     function openTeacherAuth() {
       document.getElementById('teacherAuthModal').classList.remove('hidden');
       document.getElementById('teacherPinInput').focus();
@@ -585,27 +642,12 @@
       if (url) {
         currentGFormUrl = url;
         localStorage.setItem('sman11_gform_url', url);
-        alert('Link Google Form Ujian berhasil disimpan!');
-      }
-    }
 
-    function logViolationToTable(cls, name, count) {
-      const tbody = document.getElementById('monitoringTableBody');
-      const timeStr = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-      
-      if (tbody.children[0] && tbody.children[0].children.length === 1) {
-        tbody.innerHTML = '';
+        if (db) {
+          db.collection("settings").doc("exam_config").set({ gformUrl: url });
+        }
+        alert('Link Google Form Ujian berhasil disimpan ke Cloud!');
       }
-
-      const row = document.createElement('tr');
-      row.className = 'hover:bg-slate-900/50';
-      row.innerHTML = `
-        <td class="p-2.5 text-slate-500">${timeStr}</td>
-        <td class="p-2.5 font-semibold text-sky-400">${cls}</td>
-        <td class="p-2.5 text-slate-200">${name}</td>
-        <td class="p-2.5 text-center font-bold text-red-400">${count}x</td>
-      `;
-      tbody.prepend(row);
     }
 
     function clearLogs() {
