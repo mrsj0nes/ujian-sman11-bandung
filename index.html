@@ -350,6 +350,7 @@
       document.getElementById('masterStudentCount').innerText = `Total: ${masterStudents.length} siswa`;
     }
 
+    // DUKUNGAN FULL CLOUD UNTUK MODE INCOGNITO
     async function handleClassChange() {
       document.getElementById('studentName').value = '';
       hideSuggestions();
@@ -359,6 +360,7 @@
 
       if (db) {
         try {
+          // Ambil langsung dari Firestore Firebase agar Mode Incognito tetap membaca nama siswa
           const snapshot = await db.collection("students").where("kelas", "==", selectedClass).get();
           if (!snapshot.empty) {
             const fetchedClassStudents = [];
@@ -368,7 +370,11 @@
             masterStudents.forEach(s => map.set(`${s.nama}_${s.kelas}`, s));
             fetchedClassStudents.forEach(s => map.set(`${s.nama}_${s.kelas}`, s));
             masterStudents = Array.from(map.values());
-            localStorage.setItem('sman11_master_students', JSON.stringify(masterStudents));
+            
+            try {
+              localStorage.setItem('sman11_master_students', JSON.stringify(masterStudents));
+            } catch(e) {}
+            
             updateMasterStudentCountDisplay();
           }
         } catch (err) {
@@ -511,7 +517,10 @@
       newStudents.forEach(s => map.set(`${s.nama}_${s.kelas}`, s));
       
       masterStudents = Array.from(map.values());
-      localStorage.setItem('sman11_master_students', JSON.stringify(masterStudents));
+      try {
+        localStorage.setItem('sman11_master_students', JSON.stringify(masterStudents));
+      } catch(e) {}
+      
       updateMasterStudentCountDisplay();
 
       if (db) {
@@ -530,7 +539,6 @@
       }
     }
 
-    // PEMASANGAN URL GOOGLE FORM DENGAN RESET SESSION & CLEAR COOKIE CACHE
     function handleStartExam(e) {
       e.preventDefault();
       const name = document.getElementById('studentName').value.trim();
@@ -545,15 +553,6 @@
       document.getElementById('activeStudentName').innerText = name;
       document.getElementById('activeStudentClass').innerText = cls;
 
-      // Bersihkan Session & Cookie Browser lokal agar draf jawaban terhapus total
-      try {
-        sessionStorage.clear();
-        document.cookie.split(";").forEach((c) => {
-          document.cookie = c.replace(/^ +/, "").replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
-        });
-      } catch(err) {}
-
-      // Ubah URL ke versi fresh tanpa membawa memori draf sebelumnya
       let cleanUrl = currentGFormUrl;
       cleanUrl = cleanUrl.replace(/\/viewform.*/, '/viewform');
       const randomNonce = Math.floor(Math.random() * 1000000);
@@ -654,13 +653,8 @@
         isExamActive = false;
         document.getElementById('examScreen').classList.add('hidden');
         
-        // Reset total iframe dan hapus cache sementara saat keluar
         const iframe = document.getElementById('examIframe');
         iframe.src = 'about:blank';
-
-        try {
-          sessionStorage.clear();
-        } catch(e) {}
 
         if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
         alert('Terima kasih, jawaban Anda telah tersimpan.');
@@ -692,7 +686,9 @@
       const url = document.getElementById('gformUrlInput').value.trim();
       if (url) {
         currentGFormUrl = url;
-        localStorage.setItem('sman11_gform_url', url);
+        try {
+          localStorage.setItem('sman11_gform_url', url);
+        } catch(e) {}
 
         if (db) {
           db.collection("settings").doc("exam_config").set({ gformUrl: url });
